@@ -26,15 +26,24 @@ class JsonComparator {
                     use_deepdiff : true,
                     debug        : true,
                     org_level_limit: 3
+            ],
+            properties: [
+                            compare      : ["name", "value", "description", "group",  "contextCode", "contextType"],
+                            ignore       : ["id", "userid", "date"],
+                            substitute   : [:],
+                            ignore_paths : [],
+                            use_deepdiff : false,
+                            debug        : false,
+                            custom_ignore: { path, value -> path == "name" && value.contains(".id") }
+                    ]
             ]
-    ]
 
     List<Map> fullDiffReport = []
 
     void compare(String json1, String json2, String entityType = "org") {
         def rules = comparisonRulesMap[entityType]
-        def tree1 = mapper.readTree(json1)
-        def tree2 = mapper.readTree(json2)
+        def tree1 = mapper.readTree(json1).get("responseFromHTTP1")
+        def tree2 = mapper.readTree(json2).get("responseFromHTTP2")
 
         if (!tree1.isArray() || !tree2.isArray()) {
             println "Both JSON inputs must be arrays."
@@ -126,35 +135,87 @@ class JsonComparator {
     }
 
     static void main(String[] args) {
+//        def json1 = '''
+//        [
+//          {
+//            "name": "Org A",
+//            "realm": "dev",
+//            "status": "active",
+//            "id": "123",
+//            "addresses": [{"city": "Toronto"}],
+//            "phones": [{"number": "111-1111"}],
+//            "attributes": [{"key": "tier", "value": "gold", "id": "1"}]
+//          }
+//        ]
+//        '''
+//
+//        def json2 = '''
+//        [
+//          {
+//            "name": "Org A",
+//            "realm": "prod",
+//            "status": "inactive",
+//            "id": "456",
+//            "addresses": [{"city": "Montreal"}],
+//            "phones": [{"number": "222-2222"}],
+//            "attributes": [{"key": "tier", "value": "gold", "id": "2"}]
+//          }
+//        ]
+//        '''
+
         def json1 = '''
-        [
-          {
-            "name": "Org A",
-            "realm": "dev",
-            "status": "active",
-            "id": "123",
-            "addresses": [{"city": "Toronto"}],
-            "phones": [{"number": "111-1111"}],
-            "attributes": [{"key": "tier", "value": "gold", "id": "1"}]
-          }
-        ]
+        {
+          "responseFromHTTP1" : [ {
+            "id" : 9734279404,
+            "name" : "exchange.package.id",
+            "value" : "685605",
+            "description" : null,
+            "group" : "config",
+            "userid" : 6851,
+            "date" : 1600705944000,
+            "contextCode" : "PP-BHF-QA",
+            "contextType" : "PER"
+          }, {
+            "id" : 9734279405,
+            "name" : "admin.user.id",
+            "value" : "6851",
+            "description" : null,
+            "group" : "config",
+            "userid" : 6851,
+            "date" : 1600705944000,
+            "contextCode" : "PP-BHF-QA",
+            "contextType" : "PER"
+          } ]
+        }
         '''
 
         def json2 = '''
-        [
-          {
-            "name": "Org A",
-            "realm": "prod",
-            "status": "inactive",
-            "id": "456",
-            "addresses": [{"city": "Montreal"}],
-            "phones": [{"number": "222-2222"}],
-            "attributes": [{"key": "tier", "value": "gold", "id": "2"}]
-          }
-        ]
+        {
+          "responseFromHTTP2" : [ {
+            "id" : 9794847743,
+            "name" : "exchange.package.id",
+            "value" : "1298605",
+            "description" : null,
+            "group" : "config",
+            "userid" : 12981,
+            "date" : 1741623053000,
+            "contextCode" : "PP-BHF-QA1",
+            "contextType" : "PER"
+          }, {
+            "id" : 9794847744,
+            "name" : "admin.user.id",
+            "value" : "12981",
+            "description" : null,
+            "group" : "config",
+            "userid" : 12981,
+            "date" : 1741623053000,
+            "contextCode" : "PP-BHF-QA1",
+            "contextType" : "PER"
+          } ]
+        }
         '''
 
-        new JsonComparator().compare(json1, json2, "org")
+        new JsonComparator().compare(json1, json2, "properties")
     }
 }
 
